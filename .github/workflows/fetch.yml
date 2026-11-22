@@ -1,26 +1,66 @@
-name: Fetch real flight tracks (OpenSky)
+name: Fetch real flight tracks (adsb.lol open data)
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/workflows/fetch.yml", "pipeline/opensky.py"]
+    paths: [".github/workflows/fetch.yml", "pipeline/adsblol.py"]
 permissions:
   contents: write
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - run: pip install -q requests
-      - name: OpenSky departures + tracks
-        env:
-          OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
-          OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}
-        run: python pipeline/opensky.py /tmp/out/tracks.json
+      - name: Free disk
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL; df -h / | tail -1
+      - name: Find two consecutive days in the adsb.lol archive
+        env: { GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+        run: |
+          set -x
+          for r in globe_history_2026 globe_history; do
+            gh api "repos/adsblol/$r/releases?per_page=30" --jq '.[]|.tag_name+" "+([.assets[]|.name+"|"+(.size|tostring)+"|"+.browser_download_url]|join(" "))' > /tmp/rel_$r.txt || true
+            head -c 3000 /tmp/rel_$r.txt; echo
+          done
+          python3 - <<'PY'
+          import re, datetime, json
+          rel = {}
+          for r in ["globe_history_2026", "globe_history"]:
+              try: lines = open(f"/tmp/rel_{r}.txt").read().splitlines()
+              except Exception: continue
+              for l in lines:
+                  tag, *assets = l.split(" ")
+                  m = re.match(r"v(\d{4})\.(\d{2})\.(\d{2})-planes-readsb-prod-0$", tag)
+                  if m and assets:
+                      rel.setdefault(datetime.date(*map(int, m.groups())), [a.split("|")[2] for a in assets if ".tar" in a])
+          days = sorted(rel)
+          print("days", days[-10:])
+          pick = None
+          for d in reversed(days):
+              if d - datetime.timedelta(days=1) in rel:
+                  pick = [d - datetime.timedelta(days=1), d]; break
+          json.dump({"days": [str(x) for x in pick], "urls": [rel[x] for x in pick]}, open("/tmp/pick.json", "w"))
+          print("PICK", pick, [len(rel[x]) for x in pick])
+          PY
+      - name: Download + extract
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, os
+          p = json.load(open("/tmp/pick.json"))
+          for day, urls in zip(p["days"], p["urls"]):
+              os.makedirs(f"/tmp/d/{day}", exist_ok=True)
+              cmd = "curl -sSL " + " ".join(f"'{u}'" for u in sorted(urls)) + f" | tar -xf - -C /tmp/d/{day} --wildcards '*traces*'"
+              print(cmd[:300], flush=True)
+              subprocess.run(cmd, shell=True, check=False)
+              subprocess.run(f"du -sh /tmp/d/{day}; find /tmp/d/{day} -type f | head -3; find /tmp/d/{day} -type f | wc -l", shell=True)
+          PY
+          df -h / | tail -1
+      - name: Flights Frankfurt → JFK/EWR, LAX, HND/NRT, CPT
+        run: python3 pipeline/adsblol.py /tmp/out/tracks_all.json /tmp/d/*
       - name: Push to branch fetched
         run: |
+          cp /tmp/pick.json /tmp/out/
           cd /tmp/out
           git init -q -b fetched && git config user.name "github-actions" && git config user.email "actions@github.com"
-          git add -A && git commit -q -m "OpenSky tracks $(date -u +%F)"
+          git add -A && git commit -q -m "adsb.lol tracks $(date -u +%F)"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" fetched
