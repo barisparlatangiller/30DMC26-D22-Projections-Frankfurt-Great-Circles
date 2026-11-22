@@ -23,13 +23,13 @@
     </div>
     <canvas id="map"></canvas>
     <div id="projnote"></div>
-    <label id="rhtoggle"><input type="checkbox" id="showrh" checked> show the “straight” Mercator line (dashed)</label>
+    <label id="rhtoggle"><input type="checkbox" id="showrh"> show the “straight” Mercator line (dotted)</label>
   </section>
 
   <aside id="panel">
     <div class="kick">#30DayMapChallenge · Day 22 · Projections</div>
     <h1>Why do flights curve on the map?</h1>
-    <p class="sub">Four flights from Frankfurt. Switch the projection: the routes stay the same, only the map changes.</p>
+    <p class="sub">Four real Lufthansa flights from Frankfurt (20–21 Nov 2026). Switch the projection: the routes stay the same, only the map changes.</p>
 
     <h3>Four flights</h3>
     <div id="routes"></div>
@@ -41,7 +41,12 @@
       <p>Mercator stretches the map more and more towards the poles. So the great circle, which runs north, gets stretched into a curve, while the longer constant-heading line looks straight.</p>
       <table id="tbl"><thead><tr><th>From Frankfurt</th><th>Shortest</th><th>“Straight”</th><th>Extra time</th></tr></thead><tbody></tbody></table>
       <p class="small">Extra time at 900 km/h. East–west routes gain the most; Cape Town, almost due south, gains nothing because both lines nearly coincide.</p>
-      <p>The shortest route to Los Angeles leaves Frankfurt heading <b>north-west (318°)</b>, not west, and reaches 65° N over Greenland.</p>
+      <p>The shortest route to Los Angeles leaves Frankfurt heading <b>north-west (318°)</b>, not west, and reaches 65° N over Greenland. The real LH456 did exactly that: 9,548 km, only 2% more than the shortest path.</p>
+    </div>
+    <h3>Where real flights do detour</h3>
+    <div class="txt">
+      <p>Three of the four real flights stayed within 2.2% of the shortest path. <b>Tokyo is the exception:</b> the shortest path crosses Russia, closed to European airlines since 2022. LH716 flew south of it, over the Black Sea, the Caucasus, the Caspian, Kazakhstan and China: <b>11,382 km, 1,998 km (21%) more</b> — about 2 h 13 min longer at 900 km/h.</p>
+      <p>So the curve on the map is geometry. A real detour is politics or wind.</p>
     </div>
 
     <h3>Four projections</h3>
@@ -53,13 +58,13 @@
     </div>
 
     <details><summary>Method</summary><div class="txt">
-      <p>Airport coordinates for FRA, JFK, LAX, HND and CPT. Great circles are geodesics on the WGS84 ellipsoid (pyproj), drawn with d3-geo; rhumb-line lengths use a sphere of radius 6,371 km. Extra time = extra distance ÷ 900 km/h, a typical cruise speed without wind.</p>
+      <p>Real tracks: ADS-B positions from the adsb.lol open data archive (20–21 Nov 2026, ODbL), one Lufthansa flight per route (LH400, LH456, LH716, LH576). Track length is measured along the recorded positions; where no receiver heard the plane (oceans, parts of Asia) the gap is bridged by the shortest path and drawn dotted, so real tracks are, if anything, slightly longer. Airport coordinates for FRA, JFK, LAX, HND and CPT. Great circles are geodesics on the WGS84 ellipsoid (pyproj), drawn with d3-geo; rhumb-line lengths use a sphere of radius 6,371 km. Extra time = extra distance ÷ 900 km/h, a typical cruise speed without wind.</p>
     </div></details>
     <details><summary>Limits</summary><div class="txt">
-      <p>The routes are geometry, not real flight tracks. Real flights bend around jet streams (the North Atlantic Tracks are re-drawn twice a day), closed airspace (European airlines have avoided Russia since 2022, so Frankfurt–Tokyo detours), and overflight permits.</p>
+      <p>One flight per route on one day; other days differ. Real flights bend around jet streams (the North Atlantic Tracks are re-drawn twice a day), closed airspace (European airlines have avoided Russia since 2022, so Frankfurt–Tokyo detours), and overflight permits.</p>
     </div></details>
     <details><summary>Sources</summary><div class="txt">
-      <p>Natural Earth land (public domain) via world-atlas · d3-geo · pyproj.<br>
+      <p>Flight tracks: <a href="https://www.adsb.lol/docs/open-data/historical/">adsb.lol open data</a> (ODbL 1.0) · Natural Earth land (public domain) via world-atlas · d3-geo · pyproj.<br>
       <a href="https://www.flightradar24.com/blog/aviation-explainer-series/flying-the-north-atlantic/">Flightradar24: flying the North Atlantic</a> ·
       <a href="https://www.finnair.com/de-en/bluewings/world-of-finnair/avoiding-russian-airspace--from-a-shortcut-to-a-detour-2553794">Finnair: avoiding Russian airspace</a></p>
     </div></details>

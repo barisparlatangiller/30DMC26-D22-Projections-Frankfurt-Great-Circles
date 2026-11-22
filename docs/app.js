@@ -5,7 +5,7 @@ const cv = $("#map"), ctx = cv.getContext("2d");
 const C = { ocean: "#dde7eb", land: "#ebe3d4", landLine: "#c8bca9", grat: "rgba(90,110,120,.16)", ink: "#2b2723" };
 let RT, TR = {}, LAND, LAND110, proj, kind = "mercator", sel = "la", W = 0, H = 0, DPR = 1, rot = null, t0 = performance.now();
 const NOTES = {
-  mercator: "<b>Web Mercator</b> — the map on your phone. Real tracks and great circles bow towards the pole; the dashed “straight” line keeps one compass heading and is longer.",
+  mercator: "<b>Web Mercator</b> — the map on your phone. Real tracks and the shortest paths bow towards the pole; the dotted “straight” line keeps one compass heading and is longer.",
   gnomonic: "<b>Gnomonic</b> — every great circle is a straight line. It can show less than half the Earth, so it is centred on the selected route.",
   orthographic: "<b>Globe</b> — the Earth from space. Drag to turn. Here the great circles look like what they are: the shortest way.",
   azeq: "<b>Distance from Frankfurt</b> — every line from the centre is straight and true to scale. Rings every 2,500 km."
@@ -77,7 +77,14 @@ function draw(now) {
     if (showRh) lineStr(path, r.rh, r.color, 1.6, [2, 5], a * 0.9);
     lineStr(path, r.gcPts, r.color, on ? 2.2 : 1.6, [7, 6], a);
     const tr = TR[r.id];
-    if (tr) lineStr(path, tr.path, r.color, on ? 4.2 : 3, null, a);
+    if (tr) {
+      const G = new Set(tr.gaps), w = on ? 4.2 : 3; let seg = [tr.path[0]];
+      for (let i = 1; i < tr.path.length; i++) {
+        if (G.has(i)) { lineStr(path, seg, r.color, w, null, a); lineStr(path, [tr.path[i - 1], tr.path[i]], r.color, w * 0.6, [1, 6], a); seg = [tr.path[i]]; }
+        else seg.push(tr.path[i]);
+      }
+      lineStr(path, seg, r.color, w, null, a);
+    }
     const pts = tr ? tr.path : r.gcPts, f = Math.min(1, tt * Math.max(...RT.routes.map(x => x.gc_km)) / r.gc_km);
     if (f < 1) plane(pts, f, r.color);
   }
@@ -99,7 +106,7 @@ function card() {
   $("#card").innerHTML = `<b style="color:${r.color}">Frankfurt → ${r.name} (${r.code})</b>
     <div class="k"><span>Shortest path (great circle)</span><span>${fmt(r.gc_km)} km · ${hm(Math.round(r.gc_km / 900 * 60))}</span>
     <span>“Straight” Mercator line</span><span>${fmt(r.rhumb_km)} km (+${r.extra_pct}%)</span>
-    ${tr ? `<span>Real track ${tr.callsign}, ${tr.date}</span><span>${fmt(tr.km)} km (+${Math.round((tr.km - r.gc_km) / r.gc_km * 1000) / 10}%)</span>` : ""}
+    ${tr ? `<span>Real track ${tr.callsign.replace("DLH", "LH")}, ${tr.date}</span><span>${fmt(tr.km)} km (+${Math.round((tr.km - r.gc_km) / r.gc_km * 1000) / 10}%)</span>` : ""}
     <span>Heading at take-off: shortest / “straight”</span><span>${r.heading_gc}° / ${r.heading_rhumb}°</span>
     <span>Highest latitude on the shortest path</span><span>${r.max_lat}° N</span></div>
     <div class="note"><b>Real flights:</b> ${r.note}</div>`;
@@ -116,7 +123,7 @@ async function init() {
   }
   $$("#projbar button").forEach(b => b.onclick = () => { rot = null; setProj(b.dataset.p); });
   const leg = document.createElement("div"); leg.id = "legend";
-  leg.innerHTML = `${Object.keys(TR).length ? `<div><i></i>real flight track</div>` : ""}<div><i class="gc"></i>shortest path (great circle)</div><div><i class="rh"></i>“straight” line on Mercator</div>`;
+  leg.innerHTML = `${Object.keys(TR).length ? `<div><i></i>real Lufthansa track (20–21 Nov 2026)</div><div><i style="border-top:3px dotted #5a524a"></i>no ADS-B receivers there</div>` : ""}<div><i class="gc"></i>shortest path (great circle)</div><div><i class="rh"></i>“straight” line on Mercator</div>`;
   $("#stage").appendChild(leg);
   d3.select ? 0 : 0;
   let drag = null;
