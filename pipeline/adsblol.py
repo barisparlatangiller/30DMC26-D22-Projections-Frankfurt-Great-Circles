@@ -54,6 +54,17 @@ def main(dst, dirs):
             if k % 20000 == 0:
                 print(" ", k, len(pts), flush=True)
     out = {k: [] for k in DEST}
+    print("aircraft kept", len(pts), flush=True)
+    sample = list(pts.items())[:3]
+    for hx, P in sample:
+        print("sample", hx, len(P), P[:2], P[-1:], flush=True)
+    dbg_start, ends = 0, {}
+    WANT = {"DLH400", "DLH404", "DLH410", "DLH456", "DLH450", "DLH716", "DLH714", "DLH576", "UAL961", "SIA25"}
+    for hx, P in pts.items():
+        fls = {x[4] for x in P if x[4]}
+        if fls & WANT:
+            Q = [x for x in P if x[1] is not None]
+            print("WANT", hx, fls & WANT, len(Q), Q[0][:4] if Q else None, Q[-1][:4] if Q else None, flush=True)
     for hx, P in pts.items():
         P = sorted((x for x in P if x[1] is not None), key=lambda x: x[0])
         if not P:
@@ -72,6 +83,8 @@ def main(dst, dirs):
             o = (s[0][1], s[0][2]); e = (s[-1][1], s[-1][2])
             if hav(o, FRA) > 25:
                 continue
+            dbg_start += 1
+            key = (round(e[0]), round(e[1])); ends[key] = ends.get(key, 0) + 1
             for k, aps in DEST.items():
                 if min(hav(e, ap) for ap in aps) < 60:
                     fl = next((x[4] for x in s if x[4]), "")
@@ -83,6 +96,7 @@ def main(dst, dirs):
                             thin.append([round(x[2], 4), round(x[1], 4), int(x[3])]); last = x
                     km = sum(hav((a[1], a[0]), (b[1], b[0])) for a, b in zip(thin, thin[1:]))
                     out[k].append({"hex": hx, "callsign": fl, "t0": s[0][0], "t1": s[-1][0], "km": round(km), "gaps": gaps, "path": thin})
+    print("segments from FRA", dbg_start, sorted(ends.items(), key=lambda x: -x[1])[:40], flush=True)
     for k in out:
         out[k].sort(key=lambda r: len(r["gaps"]))
         print(k, [(r["callsign"], r["km"], len(r["path"]), len(r["gaps"])) for r in out[k]][:8], flush=True)
