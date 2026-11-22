@@ -73,7 +73,7 @@ def main(dst, dirs):
         segs = []
         for a, b in zip(P, P[1:]):
             gap = b[0] - a[0]
-            if gap > 3 * 3600 or (gap > 2700 and a[3] < 1500 and b[3] < 1500):
+            if gap > 12 * 3600 or (gap > 2700 and a[3] < 1500 and b[3] < 1500):
                 segs.append(seg); seg = []
             seg.append(b)
         segs.append(seg)
