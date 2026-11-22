@@ -55,7 +55,9 @@ def main(dst, dirs):
                 print(" ", k, len(pts), flush=True)
     out = {k: [] for k in DEST}
     for hx, P in pts.items():
-        P.sort()
+        P = sorted((x for x in P if x[1] is not None), key=lambda x: x[0])
+        if not P:
+            continue
         seg = [P[0]]
         segs = []
         for a, b in zip(P, P[1:]):
