@@ -1,0 +1,26 @@
+name: Fetch real flight tracks (OpenSky)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fetch.yml", "pipeline/opensky.py"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q requests
+      - name: OpenSky departures + tracks
+        env:
+          OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
+          OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}
+        run: python pipeline/opensky.py /tmp/out/tracks.json
+      - name: Push to branch fetched
+        run: |
+          cd /tmp/out
+          git init -q -b fetched && git config user.name "github-actions" && git config user.email "actions@github.com"
+          git add -A && git commit -q -m "OpenSky tracks $(date -u +%F)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" fetched

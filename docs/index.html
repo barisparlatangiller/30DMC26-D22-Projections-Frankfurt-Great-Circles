@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Why Flights Curve</title>
+<meta name="description" content="#30DayMapChallenge 2026 · Day 22 · Projections. Four flights from Frankfurt on four map projections: why the shortest route looks curved on a flat map.">
+<meta property="og:title" content="Why do flights curve on the map?">
+<meta property="og:description" content="Four flights from Frankfurt, four projections. The flights don't curve — the flat map does.">
+<meta property="og:image" content="https://barisparlatangiller.github.io/30DMC26-D22-Projections-Frankfurt-Great-Circles/og.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="style.css?v=1" rel="stylesheet">
+</head>
+<body>
+<main>
+  <section id="stage">
+    <div id="projbar">
+      <button data-p="mercator" class="on">Web Mercator</button>
+      <button data-p="gnomonic">Gnomonic</button>
+      <button data-p="orthographic">Globe</button>
+      <button data-p="azeq">Distance from Frankfurt</button>
+    </div>
+    <canvas id="map"></canvas>
+    <div id="projnote"></div>
+    <label id="rhtoggle"><input type="checkbox" id="showrh" checked> show the “straight” Mercator line (dashed)</label>
+  </section>
+
+  <aside id="panel">
+    <div class="kick">#30DayMapChallenge · Day 22 · Projections</div>
+    <h1>Why do flights curve on the map?</h1>
+    <p class="sub">Four flights from Frankfurt. Switch the projection: the routes stay the same, only the map changes.</p>
+
+    <h3>Four flights</h3>
+    <div id="routes"></div>
+    <div id="card"></div>
+
+    <h3>Why not fly straight?</h3>
+    <div class="txt">
+      <p>A line that looks straight on a Mercator map keeps <b>one compass heading</b> all the way (a <i>rhumb line</i>). On a sphere that is not the shortest path. The shortest path is a <b>great circle</b>: stretch a string between two cities on a globe and it bows towards the pole.</p>
+      <p>Mercator stretches the map more and more towards the poles. So the great circle, which runs north, gets stretched into a curve, while the longer constant-heading line looks straight.</p>
+      <table id="tbl"><thead><tr><th>From Frankfurt</th><th>Shortest</th><th>“Straight”</th><th>Extra time</th></tr></thead><tbody></tbody></table>
+      <p class="small">Extra time at 900 km/h. East–west routes gain the most; Cape Town, almost due south, gains nothing because both lines nearly coincide.</p>
+      <p>The shortest route to Los Angeles leaves Frankfurt heading <b>north-west (318°)</b>, not west, and reaches 65° N over Greenland.</p>
+    </div>
+
+    <h3>Four projections</h3>
+    <div class="txt">
+      <p><b>Web Mercator</b> keeps angles and shapes locally, which is why it is used for navigation and web maps. It does not keep distances: the further from the equator, the bigger everything gets.</p>
+      <p><b>Gnomonic</b> shows every great circle as a straight line. The price: it can show less than half the Earth, and shapes blow up towards the edge. Old navigators drew the route on a gnomonic chart, then copied it onto Mercator to read the headings.</p>
+      <p><b>Globe (orthographic)</b> is what you would see from space. Drag it to turn.</p>
+      <p><b>Distance from Frankfurt (azimuthal equidistant)</b>: every route from the centre is a straight line with its true length. The rings are 2,500 km apart.</p>
+    </div>
+
+    <details><summary>Method</summary><div class="txt">
+      <p>Airport coordinates for FRA, JFK, LAX, HND and CPT. Great circles are geodesics on the WGS84 ellipsoid (pyproj), drawn with d3-geo; rhumb-line lengths use a sphere of radius 6,371 km. Extra time = extra distance ÷ 900 km/h, a typical cruise speed without wind.</p>
+    </div></details>
+    <details><summary>Limits</summary><div class="txt">
+      <p>The routes are geometry, not real flight tracks. Real flights bend around jet streams (the North Atlantic Tracks are re-drawn twice a day), closed airspace (European airlines have avoided Russia since 2022, so Frankfurt–Tokyo detours), and overflight permits.</p>
+    </div></details>
+    <details><summary>Sources</summary><div class="txt">
+      <p>Natural Earth land (public domain) via world-atlas · d3-geo · pyproj.<br>
+      <a href="https://www.flightradar24.com/blog/aviation-explainer-series/flying-the-north-atlantic/">Flightradar24: flying the North Atlantic</a> ·
+      <a href="https://www.finnair.com/de-en/bluewings/world-of-finnair/avoiding-russian-airspace--from-a-shortcut-to-a-detour-2553794">Finnair: avoiding Russian airspace</a></p>
+    </div></details>
+    <p class="foot">Barış Parlatangiller · <a href="https://barisparlatangiller.github.io/">30 maps</a> · <a href="https://github.com/barisparlatangiller/30DMC26-D22-Projections-Frankfurt-Great-Circles">code</a></p>
+  </aside>
+</main>
+<script src="lib/d3-array.min.js"></script>
+<script src="lib/d3-geo.min.js"></script>
+<script src="lib/topojson-client.min.js"></script>
+<script src="app.js?v=1"></script>
+</body>
+</html>
